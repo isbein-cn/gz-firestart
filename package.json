@@ -1,0 +1,45 @@
+{
+  "name": "gz-hapi-firestarter",
+  "description": "Hapi.js server composer and runner CLI",
+  "version": "1.0.0",
+  "repository": "git://github.com/hapijs/rejoice",
+  "main": "lib/index.js",
+  "keywords": [
+    "hapi",
+    "cli",
+    "utility",
+    "command"
+  ],
+  "engines": {
+    "node": ">=8.9.0"
+  },
+  "dependencies": {
+    "@hapi/bossy": "^5.1.0",
+    "@hapi/glue": "^8.0.0",
+    "@hapi/hoek": "^9.2.0",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "@hapi/catbox-memory": "^5.0.1",
+    "@hapi/code": "^8.0.3",
+    "@hapi/hapi": "^20.1.5",
+    "@hapi/lab": "^24.3.2",
+    "@typescript-eslint/eslint-plugin": "^4.29.0",
+    "@typescript-eslint/parser": "^4.29.0",
+    "cb-barrier": "1.x.x",
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "unique-filename": "^1.1.1"
+  },
+  "bin": {
+    "gz-firestart": "./bin/gz-firestart"
+  },
+  "scripts": {
+    "test": "lab -t 100 -a @hapi/code -L",
+    "test-cov-html": "lab -t 100 -a @hapi/code -L -r html -o coverage.html"
+  },
+  "license": "BSD-3-Clause"
+}
