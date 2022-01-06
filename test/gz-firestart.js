@@ -1,3 +1,15 @@
+/*
+#***********************************************
+#
+#      Filename: gz-firestart/test/gz-firestart.js
+#
+#        Author: wwj - 318348750@qq.com
+#       Company: 甘肃国臻物联网科技有限公司
+#   Description: xxx
+#        Create: 2022-01-05 16:13:56
+# Last Modified: 2022-01-06 13:45:18
+#***********************************************
+*/
 'use strict'
 
 const Fs = require('fs')
@@ -8,15 +20,14 @@ const Code = require('@hapi/code')
 const Glue = require('@hapi/glue')
 const Hoek = require('@hapi/hoek')
 const Lab = require('@hapi/lab')
-const Rejoice = require('..')
+const FireStarter = require('..')
+const Uf = require('unique-filename')
 
 // Test shortcuts
 
 const lab = exports.lab = Lab.script()
 const describe = lab.describe
 const it = lab.it
-const after = lab.after
-const before = lab.before
 const expect = Code.expect
 
 process.on('unhandledRejection', (err) => {
@@ -26,19 +37,9 @@ process.on('unhandledRejection', (err) => {
 })
 
 describe('start()', () => {
-  let consoleLog
-  before(() => {
-    consoleLog = console.log
-    console.log = Hoek.ignore
-  })
-
-  after(() => {
-    console.log = consoleLog
-  })
-
   const manifestFile = {
     server: {
-      cache: 'catbox-memory',
+      // cache: 'catbox-memory',
       app: {
         my: 'special-value'
       },
@@ -53,8 +54,8 @@ describe('start()', () => {
     }
   }
 
-  it('composes server with absolute path', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('使用绝对地址配置文件启动服务', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile))
     const compose = Glue.compose
@@ -74,15 +75,15 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '-p', modulePath]
     })
   })
 
-  it('composes server with an extra module', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('启动服务增加额外模块', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
-    const extraPath = Hoek.uniqueFilename(Os.tmpdir(), 'js')
+    const extraPath = Uf(Os.tmpdir()) + '.js'
     const extra = 'console.log(\'test passed\')'
 
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile))
@@ -107,13 +108,13 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '--require', extraPath]
     })
   })
 
-  it('uses the --p option when loading extra modules by name', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('使用 --p 选线 模块路径绝对路径', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile))
     const compose = Glue.compose
@@ -147,13 +148,13 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
-      args: ['-c', configPath, '-p', modulePath, '--require', 'hoek']
+    await FireStarter.start({
+      args: ['-c', configPath, '-p', modulePath, '--require', 'yallist']
     })
   })
 
-  it('uses the --p option when loading extra modules by relative path', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('使用 --p 选项  模块路径相对路径', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
 
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile))
@@ -188,19 +189,19 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
-      args: ['-c', configPath, '-p', modulePath, '--require', './node_modules/hoek']
+    await FireStarter.start({
+      args: ['-c', configPath, '-p', modulePath, '--require', './node_modules/yallist']
     })
   })
 
-  it('exits the process if the extra module can not be loaded', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('模块无法加载 退出', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile))
     const exit = process.exit
     const consoleError = console.error
 
     console.error = function (string, path) {
-      expect(string).to.equal('Unable to require extra file: %s (%s)')
+      expect(string).to.equal('无法加载模块: %s (%s)')
       expect(path).to.equal('/foo/bar')
     }
 
@@ -211,13 +212,13 @@ describe('start()', () => {
       Fs.unlinkSync(configPath)
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '--require', '/foo/bar']
     })
   })
 
-  it('loads a manifest with a relative path', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('相对路径加载manifest', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const m = Hoek.clone(manifestFile)
     m.register = {}
     Fs.writeFileSync(configPath, JSON.stringify(m))
@@ -237,13 +238,13 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', relativePath]
     })
   })
 
-  it('exits the process if the manifest file files to parse', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('manifest 无法解析 退出', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile) + ']]')
     const exit = process.exit
     const consoleError = console.error
@@ -258,13 +259,13 @@ describe('start()', () => {
       Fs.unlinkSync(configPath)
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath]
     })
   })
 
-  it('will error if there is an error loading packs from -p', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('使用 -p 选项加载 失败', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     Fs.writeFileSync(configPath, JSON.stringify(manifestFile))
     const realpath = Fs.realpath
@@ -288,12 +289,12 @@ describe('start()', () => {
       callback(new Error('mock error'))
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '-p', modulePath]
     })
   })
 
-  it('parses $prefixed values as environment variable values', async () => {
+  it('编译 $prefixed 的值', async () => {
     const m = Hoek.clone(manifestFile)
 
     m.server = {
@@ -334,7 +335,7 @@ describe('start()', () => {
     changes.push(setEnv('special_value', 'special-value'))
     // Ensure that the 'undefined' environment variable is *not* set.
     changes.push(setEnv('undefined'))
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     Fs.writeFileSync(configPath, JSON.stringify(m))
 
@@ -368,17 +369,17 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '-p', modulePath]
     })
   })
 
-  it('exits the process if the arguments are invalid', async () => {
+  it('参数无效退出进程', async () => {
     const consoleError = console.error
     const exit = process.exit
 
     console.error = function (value) {
-      expect(value).to.match(/rejoice -c manifest.json [-p node_modules_path -r pre_load_module]/)
+      expect(value).to.match(/gz-firestart -c manifest.json [-p node_modules_path -r pre_load_module]/)
     }
 
     process.exit = function (code) {
@@ -387,16 +388,16 @@ describe('start()', () => {
       console.error = consoleError
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: []
     })
   })
 
-  it('prints help with the -h argument', async () => {
+  it('-h 输出帮助信息', async () => {
     const exit = process.exit
 
     console.log = function (value) {
-      expect(value).to.match(/rejoice -c manifest.json [-p node_modules_path -r pre_load_module]/)
+      expect(value).to.match(/gz-firestart -c manifest.json [-p node_modules_path -r pre_load_module]/)
     }
 
     process.exit = function (code) {
@@ -405,13 +406,13 @@ describe('start()', () => {
       console.log = Hoek.ignore
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-h', '-c', 'foo.json']
     })
   })
 
-  it('throws an error if there are problems loading the plugins', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('加载插件有错误抛出错误', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     const m = Hoek.clone(manifestFile)
     Fs.writeFileSync(configPath, JSON.stringify(m))
@@ -432,13 +433,13 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '-p', modulePath]
     })
   })
 
-  it('throws an error if there is a problem starting the server', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+  it('启动服务有错抛出错误', async () => {
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     const m = Hoek.clone(manifestFile)
 
@@ -462,13 +463,13 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '-p', modulePath]
     })
   })
 
   it('kills the process on SIGQUIT and restarts on SIGUSR2', async () => {
-    const configPath = Hoek.uniqueFilename(Os.tmpdir(), 'json')
+    const configPath = Uf(Os.tmpdir()) + '.json'
     const modulePath = Path.join(__dirname, 'plugins')
     const m = Hoek.clone(manifestFile)
 
@@ -476,7 +477,7 @@ describe('start()', () => {
 
     const compose = Glue.compose
     const exit = process.exit
-    const start = Rejoice.start
+    const start = FireStarter.start
 
     // There are many of these already attached
     process.removeAllListeners('SIGUSR2')
@@ -498,8 +499,8 @@ describe('start()', () => {
           expect(value).to.equal(0)
         }
 
-        Rejoice.start = function (options) {
-          Rejoice.start = start
+        FireStarter.start = function (options) {
+          FireStarter.start = start
           expect(options).to.equal({
             args: ['-c', configPath, '-p', modulePath]
           })
@@ -512,7 +513,7 @@ describe('start()', () => {
       return server
     }
 
-    await Rejoice.start({
+    await FireStarter.start({
       args: ['-c', configPath, '-p', modulePath]
     })
   })
